@@ -39,6 +39,8 @@ async function run () {
         })
 
         // Appointment Booking
+        
+
         app.post('/booking', async(req, res) => {
             const body = req.body;
 
