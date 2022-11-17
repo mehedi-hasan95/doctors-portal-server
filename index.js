@@ -20,6 +20,7 @@ async function run () {
     try {
         const appointmentData = client.db("doctorsPortal").collection("slots");
         const appointmentBooking = client.db("doctorsPortal").collection("booking");
+        const registerUser = client.db("doctorsPortal").collection("users");
         app.get('/apointmentOptions', async(req, res) => {
             const date = req.query.date;
             const query = {};
@@ -39,10 +40,15 @@ async function run () {
         })
 
         // Appointment Booking
+        app.get('/booking', async(req, res) => {
+            const email = req.query.email;
+            const query = {email: email};
+            const cursor = await appointmentBooking.find(query).toArray();
+            res.send(cursor);
+        })
+
         app.post('/booking', async(req, res) => {
             const body = req.body;
-
-
             const query = {
                 appointmentDate: body.appointmentDate,
                 service: body.service,
@@ -56,6 +62,13 @@ async function run () {
 
 
             const result = await appointmentBooking.insertOne(body);
+            res.send(result);
+        })
+
+        // Register User Info 
+        app.post('/users', async(req, res) => {
+            const user = req.body;
+            const result = await registerUser.insertOne(user);
             res.send(result);
         })
     }
