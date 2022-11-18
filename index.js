@@ -103,7 +103,16 @@ async function run () {
         })
 
         // Make a user as admin
-        app.put('/users/admin/:id', async(req, res) => {
+        app.put('/users/admin/:id', verifyJWT, async(req, res) => {
+            const decodedEmail = req.decoded.email;
+            const query = {email: decodedEmail};
+            const user = await registerUser.findOne(query);
+            if(user.role !== 'admin') {
+                return res.status(403).send({message: 'Unauthorize Access'});
+            }
+
+
+
             const id = req.params.id;
             const filter = {_id: ObjectId(id)};
             const options = { upsert: true };
