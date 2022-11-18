@@ -3,6 +3,7 @@ const app = express();
 const { MongoClient, ServerApiVersion } = require('mongodb');
 cors = require('cors');
 require('dotenv').config();
+const jwt = require('jsonwebtoken');
 const port = process.env.PORT || 5000;
 
 // midleware 
@@ -16,6 +17,24 @@ app.get('/', (req, res) => {
 
 const uri = `mongodb+srv://${process.env.DB_USERNAME}:${process.env.USER_SECRET}@cluster0.k4gmzpi.mongodb.net/?retryWrites=true&w=majority`;
 const client = new MongoClient(uri, { useNewUrlParser: true, useUnifiedTopology: true, serverApi: ServerApiVersion.v1 });
+
+// Verify JWT 
+function verifyJWT(req, res, next) {
+    const verifyToken = req.headers.authorization;
+    if(!verifyToken) {
+        return res.status(401).send('Unauthorize Access');
+    }
+
+    const token = verifyToken.split(' ')[1];
+    jwt.verify(token, process.env.ACCESS_KEY, function(err, decoded) {
+        if(err) {
+            return res.status(403).send({message: 'Frobiden Access'})
+        }
+        req.decoded = decoded;
+        next();
+    })
+}
+
 async function run () {
     try {
         const appointmentData = client.db("doctorsPortal").collection("slots");
@@ -40,8 +59,12 @@ async function run () {
         })
 
         // Appointment Booking
-        app.get('/booking', async(req, res) => {
+        app.get('/booking', verifyJWT, async(req, res) => {
             const email = req.query.email;
+            decodedEmail = req.decoded.email;
+            if(email !== decodedEmail) {
+                res.status(403).send({message: 'Unauthorize Access'});
+            }
             const query = {email: email};
             const cursor = await appointmentBooking.find(query).toArray();
             res.send(cursor);
@@ -71,6 +94,30 @@ async function run () {
             const result = await registerUser.insertOne(user);
             res.send(result);
         })
+
+        // All Users
+        app.get('/users', async(req, res) => {
+            const query = {};
+            const cursor = await registerUser.find(query).toArray();
+            res.send(cursor);
+        })
+
+        
+
+        // JWT Token
+        app.get('/jwt', async(req, res) => {
+            const email = req.query.email;
+            const query = {email: email};
+            const result = await registerUser.findOne(query);
+            if(result) {
+                const token = jwt.sign({email}, process.env.ACCESS_KEY, {expiresIn: '1h'});
+                return res.send({token})
+            }
+            res.status(403).send({message: 'Unauthorize Access'})
+        })
+
+        
+
     }
     finally {
 
