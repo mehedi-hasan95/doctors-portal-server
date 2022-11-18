@@ -111,8 +111,6 @@ async function run () {
                 return res.status(403).send({message: 'Unauthorize Access'});
             }
 
-
-
             const id = req.params.id;
             const filter = {_id: ObjectId(id)};
             const options = { upsert: true };
@@ -123,6 +121,14 @@ async function run () {
             };
             const result = await registerUser.updateOne(filter, updateDoc, options);
             res.send(result);
+        })
+
+        // Prevent all except admin
+        app.get('/users/admin/:email', async(req, res) => {
+            const email = req.params.email;
+            const query = {email}
+            const user = await registerUser.findOne(query);
+            res.send({isAdmin: user?.role === 'admin'})
         })
         
 
