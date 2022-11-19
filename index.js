@@ -58,6 +58,13 @@ async function run () {
             res.send(options);
         })
 
+        // Appointment Name for doctors
+        app.get('/appointmentname', async(req, res) => {
+            const query = {};
+            const cursor = await appointmentData.find(query).project({name: 1}).toArray();
+            res.send(cursor);
+        })
+
         // Appointment Booking
         app.get('/booking', verifyJWT, async(req, res) => {
             const email = req.query.email;
