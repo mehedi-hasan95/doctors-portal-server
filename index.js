@@ -40,6 +40,7 @@ async function run () {
         const appointmentData = client.db("doctorsPortal").collection("slots");
         const appointmentBooking = client.db("doctorsPortal").collection("booking");
         const registerUser = client.db("doctorsPortal").collection("users");
+        const registerDoctors = client.db("doctorsPortal").collection("doctors");
         app.get('/apointmentOptions', async(req, res) => {
             const date = req.query.date;
             const query = {};
@@ -136,6 +137,21 @@ async function run () {
             const query = {email}
             const user = await registerUser.findOne(query);
             res.send({isAdmin: user?.role === 'admin'})
+        })
+
+        // Doctors Section
+
+        app.get('/doctors', async(req, res) => {
+            const query = {};
+            const cursor = await registerDoctors.find(query).toArray();
+            res.send(cursor);
+        })
+
+
+        app.post('/doctors', async(req, res) => {
+            const doctor = req.body;
+            const result = await registerDoctors.insertOne(doctor);
+            res.send(result);
         })
         
 
