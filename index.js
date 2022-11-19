@@ -153,6 +153,14 @@ async function run () {
             const result = await registerDoctors.insertOne(doctor);
             res.send(result);
         })
+
+        // Delete a doctor
+        app.delete('/doctors/:id', async(req, res) => {
+            const doctor = req.params.id;
+            const query = {_id: ObjectId(doctor)}
+            const result = await registerDoctors.deleteOne(query);
+            res.send(result);
+        })
         
 
         // JWT Token
