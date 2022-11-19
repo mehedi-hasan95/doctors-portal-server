@@ -146,6 +146,14 @@ async function run() {
             res.send({ isAdmin: user?.role === 'admin' })
         })
 
+        // Delete user
+        app.delete('/users/:id', verifyJWT, async(req, res) => {
+            const user = req.params.id;
+            const query = {_id: ObjectId(user)}
+            const result = await registerUser.deleteOne(query);
+            res.send(result)
+        })
+
         // Doctors Section
 
         app.get('/doctors', async (req, res) => {
@@ -176,7 +184,7 @@ async function run() {
             const query = { email: email };
             const result = await registerUser.findOne(query);
             if (result) {
-                const token = jwt.sign({ email }, process.env.ACCESS_KEY, { expiresIn: '1h' });
+                const token = jwt.sign({ email }, process.env.ACCESS_KEY, { expiresIn: '1m' });
                 return res.send({ token })
             }
             res.status(403).send({ message: 'Unauthorize Access' })
