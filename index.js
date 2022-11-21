@@ -63,6 +63,7 @@ async function run() {
         const appointmentBooking = client.db("doctorsPortal").collection("booking");
         const registerUser = client.db("doctorsPortal").collection("users");
         const registerDoctors = client.db("doctorsPortal").collection("doctors");
+        const patientPayments = client.db("doctorsPortal").collection("payments");
 
         // Midleware to Verify admin 
         const verifyAdmin = async (req, res, next) => {
@@ -75,6 +76,20 @@ async function run() {
             next();
         }
 
+        app.post('/payments', async(req, res) => {
+            const body = req.body;
+            const result = await patientPayments.insertOne(body);
+            const id = body.serviceId;
+            const filter = {_id: ObjectId(id)}
+            const options = { upsert: true };
+            const updateDoc = {
+                $set: {
+                  paid: true,
+                }
+            };
+            const updetedStatus = await appointmentBooking.updateOne(filter, updateDoc, options);
+            res.send(result);
+        })
 
         app.get('/apointmentOptions', async (req, res) => {
             const date = req.query.date;
