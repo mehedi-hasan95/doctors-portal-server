@@ -35,6 +35,25 @@ function verifyJWT(req, res, next) {
     })
 }
 
+function verifyJWT(req, res, next) {
+
+    const authHeader = req.headers.authorization;
+    if (!authHeader) {
+        return res.status(401).send('unauthorized access');
+    }
+
+    const token = authHeader.split(' ')[1];
+
+    jwt.verify(token, process.env.ACCESS_KEY, function (err, decoded) {
+        if (err) {
+            return res.status(403).send({ message: 'forbidden access' })
+        }
+        req.decoded = decoded;
+        next();
+    })
+
+}
+
 async function run() {
     try {
         const appointmentData = client.db("doctorsPortal").collection("slots");
@@ -50,6 +69,7 @@ async function run() {
             if (user.role !== 'admin') {
                 return res.status(403).send({ message: 'Unauthorize Access' });
             }
+            next();
         }
 
 
@@ -82,6 +102,7 @@ async function run() {
         app.get('/booking', verifyJWT, async (req, res) => {
             const email = req.query.email;
             decodedEmail = req.decoded.email;
+            
             if (email !== decodedEmail) {
                 res.status(403).send({ message: 'Unauthorize Access' });
             }
@@ -138,6 +159,19 @@ async function run() {
             res.send(result);
         })
 
+        app.put('/users/admin/:id', verifyJWT, verifyAdmin, async (req, res) => {
+            const id = req.params.id;
+            const filter = { _id: ObjectId(id) }
+            const options = { upsert: true };
+            const updatedDoc = {
+                $set: {
+                    role: 'admin'
+                }
+            }
+            const result = await usersCollection.updateOne(filter, updatedDoc, options);
+            res.send(result);
+        });
+
         // Prevent all except admin
         app.get('/users/admin/:email', async (req, res) => {
             const email = req.params.email;
@@ -170,7 +204,7 @@ async function run() {
         })
 
         // Delete a doctor
-        app.delete('/doctors/:id', verifyJWT, verifyAdmin, async (req, res) => {
+        app.delete('/doctors/:id', verifyJWT, async (req, res) => {
             const doctor = req.params.id;
             const query = { _id: ObjectId(doctor) }
             const result = await registerDoctors.deleteOne(query);
