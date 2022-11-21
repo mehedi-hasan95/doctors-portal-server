@@ -1,8 +1,11 @@
 const express = require('express');
 const app = express();
+require('dotenv').config();
 const { MongoClient, ServerApiVersion, ObjectId } = require('mongodb');
 cors = require('cors');
-require('dotenv').config();
+
+const stripe = require("stripe")(process.env.PAYMENT_KEY);
+
 const jwt = require('jsonwebtoken');
 const port = process.env.PORT || 5000;
 
@@ -102,7 +105,7 @@ async function run() {
         app.get('/booking', verifyJWT, async (req, res) => {
             const email = req.query.email;
             decodedEmail = req.decoded.email;
-            
+
             if (email !== decodedEmail) {
                 res.status(403).send({ message: 'Unauthorize Access' });
             }
@@ -129,9 +132,9 @@ async function run() {
             res.send(result);
         })
 
-        app.get('/booking/:id', async(req, res) => {
+        app.get('/booking/:id', async (req, res) => {
             const id = req.params.id;
-            const query = {_id: ObjectId(id)}
+            const query = { _id: ObjectId(id) }
             const booking = await appointmentBooking.findOne(query);
             res.send(booking);
         })
@@ -152,7 +155,7 @@ async function run() {
 
         // Make a user as admin
         app.put('/users/admin/:id', verifyJWT, verifyAdmin, async (req, res) => {
-            
+
 
             const id = req.params.id;
             const filter = { _id: ObjectId(id) };
@@ -188,9 +191,9 @@ async function run() {
         })
 
         // Delete user
-        app.delete('/users/:id', verifyJWT, async(req, res) => {
+        app.delete('/users/:id', verifyJWT, async (req, res) => {
             const user = req.params.id;
-            const query = {_id: ObjectId(user)}
+            const query = { _id: ObjectId(user) }
             const result = await registerUser.deleteOne(query);
             res.send(result)
         })
@@ -218,6 +221,26 @@ async function run() {
             res.send(result);
         })
 
+
+        // Payment 
+        app.post("/create-payment-intent", async (req, res) => {
+            const items = req.body;
+            const price = items.price;
+            const amount = price * 100;
+
+            
+            const paymentIntent = await stripe.paymentIntents.create({
+                currency: 'usd',
+                amount: amount,
+                "payment_method_types": [
+                    "card"
+                ]
+            });
+
+            res.send({
+                clientSecret: paymentIntent.client_secret,
+            });
+        });
 
         // JWT Token
         app.get('/jwt', async (req, res) => {
