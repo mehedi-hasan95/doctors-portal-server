@@ -129,6 +129,13 @@ async function run() {
             res.send(result);
         })
 
+        app.get('/booking/:id', async(req, res) => {
+            const id = req.params.id;
+            const query = {_id: ObjectId(id)}
+            const booking = await appointmentBooking.findOne(query);
+            res.send(booking);
+        })
+
         // Register User Info 
         app.post('/users', async (req, res) => {
             const user = req.body;
@@ -218,7 +225,7 @@ async function run() {
             const query = { email: email };
             const result = await registerUser.findOne(query);
             if (result) {
-                const token = jwt.sign({ email }, process.env.ACCESS_KEY, { expiresIn: '1m' });
+                const token = jwt.sign({ email }, process.env.ACCESS_KEY, { expiresIn: '1h' });
                 return res.send({ token })
             }
             res.status(403).send({ message: 'Unauthorize Access' })
