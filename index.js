@@ -21,22 +21,22 @@ app.get('/', (req, res) => {
 const uri = `mongodb+srv://${process.env.DB_USERNAME}:${process.env.USER_SECRET}@cluster0.k4gmzpi.mongodb.net/?retryWrites=true&w=majority`;
 const client = new MongoClient(uri, { useNewUrlParser: true, useUnifiedTopology: true, serverApi: ServerApiVersion.v1 });
 
-// Verify JWT 
-function verifyJWT(req, res, next) {
-    const verifyToken = req.headers.authorization;
-    if (!verifyToken) {
-        return res.status(401).send('Unauthorize Access');
-    }
+// // Verify JWT 
+// function verifyJWT(req, res, next) {
+//     const verifyToken = req.headers.authorization;
+//     if (!verifyToken) {
+//         return res.status(401).send('Unauthorize Access');
+//     }
 
-    const token = verifyToken.split(' ')[1];
-    jwt.verify(token, process.env.ACCESS_KEY, function (err, decoded) {
-        if (err) {
-            return res.status(403).send({ message: 'Frobiden Access' })
-        }
-        req.decoded = decoded;
-        next();
-    })
-}
+//     const token = verifyToken.split(' ')[1];
+//     jwt.verify(token, process.env.ACCESS_KEY, function (err, decoded) {
+//         if (err) {
+//             return res.status(403).send({ message: 'Frobiden Access' })
+//         }
+//         req.decoded = decoded;
+//         next();
+//     })
+// }
 
 function verifyJWT(req, res, next) {
 
